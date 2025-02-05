@@ -1,11 +1,12 @@
 import numpy as np
-
+import tools as tl
 
 
 def main():
     try :
-        pass
-
+        df = tl.load_csv('data/training_set.csv')
+        df = tl.normalize_datas(df)
+        
     except Exception as e:
         print(f"Error: {e}")
 
