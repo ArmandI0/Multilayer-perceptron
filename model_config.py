@@ -4,7 +4,7 @@ import pandas as pd
 import json
 
 activationFunctions = ['relu', 'sigmoid', 'tanh', 'softmax', 'linear']
-weightInitializers = ['random_normal', 'random_uniform', 'glorot_normal', 'glorot_uniform', 'he_normal', 'he_uniform']
+weightInitializers = ['uniform_init', 'glorot_uniform', 'he_normal', 'lecun_uniform']
 
 df = pd.DataFrame(columns=['nbOfNeurons', 'weightInit', 'activationFunction'])
 labels = []

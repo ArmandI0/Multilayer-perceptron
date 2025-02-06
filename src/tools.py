@@ -1,14 +1,14 @@
 import pandas as pd
 import math as mt
 
-def load_csv(path: str) -> pd.DataFrame:
+def load_csv(path: str, header: int) -> pd.DataFrame:
     """
     Function to load a csv
     Parameters : path of the csv
     Return : pd.DataFrame containing the csv datass
     """
     try:
-        csv = pd.read_csv(path, header=None, index_col=0)
+        csv = pd.read_csv(path, header=0, index_col=0)
     except Exception as e:
         print(f"loading csv error : {e}")
         return None
@@ -21,8 +21,6 @@ def split_dataset_randomly(datas: pd.DataFrame):
 
     size = len(datas)
     mid = int(size / 2)
-    print(size)
-    print(mid)
 
     trainingSet =  randomData.iloc[0:mid, :]
     testingSet = randomData.iloc[mid:size, :]
@@ -39,7 +37,7 @@ def normalizePdSeries(variable : pd.Series, parameters : pd.Series) -> pd.Series
     return variableNormalized
 
 def normalize_datas(datas: pd.DataFrame):
-    entry = datas.drop(columns=1)
+    entry = datas.drop(columns='1')
     normalizeDatas = pd.DataFrame()
     normalisationParam = pd.DataFrame(index=['mean', 'std', 'median'])
     for serie in entry.columns:
@@ -49,11 +47,12 @@ def normalize_datas(datas: pd.DataFrame):
         normalisationParam[serie] = [median, mean, std]
         normalizeDatas[serie] = normalizePdSeries(entry[serie].fillna(median), normalisationParam[serie])
     normalisationParam.to_csv('data/normalistaion_params.csv')
+    return normalizeDatas
 
         
 
 
-df = load_csv('data/data.csv')
-print(df.describe())
-normalize_datas(df)
+# df = load_csv('data/data.csv')
+# print(df.describe())
+# normalize_datas(df)
     
