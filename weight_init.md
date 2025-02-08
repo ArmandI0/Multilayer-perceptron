@@ -2,6 +2,12 @@
 
 Ce guide présente les 4 principales fonctions d'initialisation des poids utilisées dans les réseaux de neurones.
 
+## Operation matricielle
+
+A = 
+
+
+
 ## 1. Initialisation Uniforme Simple
 
 **Formule**: `W ~ U(-a, +a)`

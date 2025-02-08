@@ -47,7 +47,134 @@ A[l] = [1.2  2.1  0.8  1.5  0.9]    # Shape (4, 5)
        [3.7  0.3  2.2  0.5  1.8]    
        [0.0  0.0  1.5  1.9  0.7]
 
+
 ```
+
+```
+   Produit matriciel pour 4 entree:
+
+A[l] = feature1[1.2  2.1  0.8  1.5  0.9]    # Shape (4, 5)
+       feature2[0.0  1.7  0.0  2.2  1.1]    
+       feature3[3.7  0.3  2.2  0.5  1.8]    
+       feature4[0.0  0.0  1.5  1.9  0.7]
+
+              N1     N2    N3    N4
+W[l] = poids[w1,1  w1,2  w1,3  w1,4]    # Shape (4, 4)
+       poids[w2,1  w2,2  w2,3  w2,4]     
+       poids[w3,1  w3,2  w3,3  w3,4]
+       poids[w4,1  w4,2  w4,3  w4,4]
+
+
+```
+### 1. Définition des matrices
+
+#### Matrice des entrées \( A[l] \) (4,5) :
+```math
+A[l] = \begin{bmatrix}
+       1.2 & 2.1 & 0.8 & 1.5 & 0.9 \\
+       0.0 & 1.7 & 0.0 & 2.2 & 1.1 \\
+       3.7 & 0.3 & 2.2 & 0.5 & 1.8 \\
+       0.0 & 0.0 & 1.5 & 1.9 & 0.7
+       \end{bmatrix}
+```
+
+#### Matrice des poids \( W[l] \) (4,4) :
+
+```math
+W[l] =
+       \begin{bmatrix}
+       0.2 & 0.5 & -0.3 & 0.8 \\
+       -0.5 & 1.2 & 0.7 & -0.9 \\
+       1.1 & -0.4 & 0.6 & 0.3 \\
+       0.3 & 0.8 & -1.2 & 0.5
+       \end{bmatrix}
+```
+
+Le produit à calculer est :
+
+
+#### **Colonne 1 (\( j = 1 \)) :**
+```math
+Z_{1,1} = (0.2 \times 1.2) + (0.5 \times 0.0) + (-0.3 \times 3.7) + (0.8 \times 0.0)
+```
+```math
+= 0.24 + 0 - 1.11 + 0 = -0.87
+```
+
+```math
+Z_{2,1} = (-0.5 \times 1.2) + (1.2 \times 0.0) + (0.7 \times 3.7) + (-0.9 \times 0.0)
+```
+```math
+= -0.6 + 0 + 2.59 + 0 = 1.99
+```
+
+```math
+Z_{3,1} = (1.1 \times 1.2) + (-0.4 \times 0.0) + (0.6 \times 3.7) + (0.3 \times 0.0)
+```
+```math
+= 1.32 + 0 + 2.22 + 0 = 3.54
+```
+
+```math
+Z_{4,1} = (0.3 \times 1.2) + (0.8 \times 0.0) + (-1.2 \times 3.7) + (0.5 \times 0.0)
+```
+```math
+= 0.36 + 0 - 4.44 + 0 = -4.08
+```
+
+#### **Colonne 2 (\( j = 2 \)) :**
+```math
+Z_{1,2} = (0.2 \times 2.1) + (0.5 \times 1.7) + (-0.3 \times 0.3) + (0.8 \times 0.0)
+```
+```math
+= 0.42 + 0.85 - 0.09 + 0 = 1.18
+```
+
+```math
+Z_{2,2} = (-0.5 \times 2.1) + (1.2 \times 1.7) + (0.7 \times 0.3) + (-0.9 \times 0.0)
+```
+```math
+= -1.05 + 2.04 + 0.21 + 0 = 1.20
+```
+
+```math
+Z_{3,2} = (1.1 \times 2.1) + (-0.4 \times 1.7) + (0.6 \times 0.3) + (0.3 \times 0.0)
+```
+```math
+= 2.31 - 0.68 + 0.18 + 0 = 1.81
+```
+
+```math
+Z_{4,2} = (0.3 \times 2.1) + (0.8 \times 1.7) + (-1.2 \times 0.3) + (0.5 \times 0.0)
+```
+```math
+= 0.63 + 1.36 - 0.36 + 0 = 1.63
+```
+
+### 3. Résultat final
+
+```math
+Z =
+\begin{bmatrix}
+-0.87 & 1.18 & 0.63 & 0.92 & 0.24 \\
+1.99 & 1.20 & 1.54 & -0.13 & 1.41 \\
+3.54 & 1.81 & 2.22 & 1.59 & 2.58 \\
+-4.08 & 1.63 & -1.68 & -1.02 & -2.64
+\end{bmatrix}
+\]
+
+---
+
+### **Résumé du calcul**
+- \( A[l] \) a **4 features et 5 échantillons**, donc **forme (4,5)**.
+- \( W[l] \) a **4 neurones avec 4 poids chacun**, donc **forme (4,4)**.
+- Le produit \( W[l] \times A[l] \) est bien **(4,5)**.
+- Chaque \( Z_{i,j} \) est obtenu en multipliant les poids d’un neurone par les 4 features et en faisant la somme.
+
+---
+
+Voilà ! 😊 Ce format est **compatible avec Markdown** pour une belle mise en page.  
+Si tu veux un **fichier .md**, dis-moi et je peux te le générer ! 🚀
 
 
 ### 2. L'Activation

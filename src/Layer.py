@@ -1,13 +1,11 @@
 import numpy as np
 
-
-class Layer:
-
+class NeuralLayer:
     def __init__(self, sizeOfLayer: int, inputSize: int, initFunction: str):
         self.inputSize = inputSize
         self.numberOfNeurons = sizeOfLayer
-        self.biais = np.zeros(inputSize)
-        self.weights = self.initFunctions[initFunction](self) 
+        self.biais = np.zeros(sizeOfLayer).reshape(-1,1).T
+        self.weights = self.initFunctions[initFunction](self)
 
     # Fonctions d'initialisations des poids
     def uniform_init(self):
@@ -31,12 +29,33 @@ class Layer:
         'lecun_uniform': lambda self: self.lecun_uniform(),
     }
 
+class HiddenLayer(NeuralLayer):
+
+    def __init__(self, sizeOfLayer: int, inputSize: int, initFunction: str):
+        super().__init__(sizeOfLayer, inputSize, initFunction)
+
+
     # Forward propagation
 
     def forwardPropagation(self, A):
-        print('shape weight = ', self.weights.shape, 'shape A = ', A.shape, 'shape biais', self.biais.shape)
-        Z = np.dot(self.weights, A) + self.biais
-        self.ReLU(Z)
+        print("=" * 50)
+        print(f"🟢 Forward Propagation - Layer Info")
+        print("=" * 50)
+
+        print(f"🔹 Shape of Weights: {self.weights.shape}")
+        print(f"Weights:\n{repr(self.weights)}\n")
+
+        print(f"🔹 Shape of Input A: {A.shape}")
+        print(f"Input A:\n{repr(A)}\n")
+
+        Z = np.dot(A, self.weights) + self.biais
+
+        print("=" * 50)
+        print(f"🔹 Computed Z Matrix: {Z.shape}")
+        print(f"Z Matrix:\n{repr(Z)}\n")
+        print("=" * 50)
+
+        return self.ReLU(Z)
 
     # Utils
     def size(self):
@@ -51,5 +70,22 @@ class Layer:
     # Fonctons d'activations
 
     def ReLU(self, X):
-        print(max(0, X))
-        return max(0, X)
+        return np.maximum(0, X)
+    
+class OutputLayer(NeuralLayer):
+    def __init__(self, outputSize: int, inputSize: int, initFunction: str):
+        super().__init__(outputSize, inputSize, initFunction)
+
+    def softmax(self, Z):
+        # On soustrait le max pour la stabilité numérique
+        # (évite les explosions de exp())
+        Z = Z - np.max(Z, axis=1, keepdims=True)
+        # Calcul de exp() pour chaque élément
+        exp_Z = np.exp(Z)
+        # Division par la somme pour normaliser
+        return exp_Z / np.sum(exp_Z, axis=1, keepdims=True)
+    
+    def forwardPropagation(self, A):
+        Z = np.dot(A, self.weights) + self.biais
+        return self.softmax(Z)
+

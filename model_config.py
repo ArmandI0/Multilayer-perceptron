@@ -33,14 +33,16 @@ def save_as_json(frm):
         display_label(frm, 'ERROR : Select nb of layers', 4, 1)
         return
     
-    result = pd.DataFrame(columns=['nbOfNeurons', 'weightInit', 'activationFunction'])
-    for idx, row in df.iterrows():
+    hiddenLayer = pd.DataFrame(columns=['nbOfNeurons', 'weightInit', 'activationFunction'])
+    for idx in range(len(df)-1):  # Tout sauf la dernière ligne
+        row = df.loc[idx]
         if any(feat.get() is None or feat.get() == "" for feat in row):
             display_label(frm, 'ERROR : Empty field', 4, 1)
             return
-        result.loc[idx] = [feat.get() for feat in row]
-    
-    for neurons in result['nbOfNeurons']:
+        hiddenLayer.loc[idx] = [feat.get() for feat in row]
+
+    # parse Neurons
+    for neurons in hiddenLayer['nbOfNeurons']:
         try:
             if not (isinstance(int(neurons), int) and 1 <= int(neurons) <= 100):
                 display_label(frm, 'ERROR : Invalid numbers of neurons', 4, 1)
@@ -48,10 +50,19 @@ def save_as_json(frm):
         except ValueError:
             display_label(frm, 'ERROR : Invalid numbers of neurons', 4, 1)
             return
-    result = result.T
-    jsonDict = result.to_dict()
+
+    output_layer = df.iloc[-1]
+    if output_layer['weightInit'].get() is None or output_layer['weightInit'].get() == "":
+        display_label(frm, 'ERROR : Empty field in output layer', 4, 1)
+        return
+
+    result = hiddenLayer.T
+    result = result.to_dict()
+    result['OutputLayer'] = {
+        'weightInit': output_layer['weightInit'].get()
+    }
     with open("generated_config.json", "w") as file:
-        json.dump(jsonDict, file, indent=4)
+        json.dump(result, file, indent=4)
 
 
 def display_paramaters(frm, numberOfLayer):
@@ -67,7 +78,6 @@ def display_paramaters(frm, numberOfLayer):
     
     for i in range(n):
         # Layer name
-        layerName = 'Layer', i + 1
         display_label(frm, ('Layer', i + 1), i, 3)
         
         # nb neurons
@@ -86,6 +96,12 @@ def display_paramaters(frm, numberOfLayer):
         activationFct.grid(column=i, row=9)
         
         df.loc[i] = [nbOfNeurons, weightInit, activationFct]
+    i += 1
+    display_label(frm, ('Output Layer'), i, 3)
+    display_label(frm, 'Init weight settings', i, 6)
+    weightInit = ttk.Combobox(frm, values=weightInitializers)
+    weightInit.grid(column=i, row=7, padx=10, pady=10)
+    df.loc[i] = [None, weightInit, None]
 
 def main():
     try:
@@ -102,7 +118,7 @@ def main():
             frm.grid_columnconfigure(i, minsize=100)
 
         ttk.Label(frm, text='Select number of hidden layer').grid(column=0, row=0)
-        numberOfLayer = ttk.Combobox(frm, values=(2, 3, 4, 5))
+        numberOfLayer = ttk.Combobox(frm, values=(2, 3, 4))
         numberOfLayer.grid(column=0, row=1)
 
         ttk.Button(frm, text='ok', command=lambda: display_paramaters(frm, numberOfLayer)).grid(column=1, row=1)
