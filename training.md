@@ -1,5 +1,5 @@
 # Comprendre les Réseaux de Neurones : De l'Initialisation à la Prédiction
-
+https://medium.com/@tiago.tmleite/neural-networks-multilayer-perceptron-and-the-backpropagation-algorithm-a5cd5b904fde
 ## 🧠 Introduction
 Imaginez un réseau de neurones comme une usine de transformation. Les données entrent d'un côté, passent par plusieurs chaînes de montage (les couches), et ressortent transformées de l'autre côté. Chaque ouvrier (neurone) de chaque chaîne applique ses propres règles de transformation.
 

@@ -76,9 +76,11 @@ class OutputLayer(NeuralLayer):
     def __init__(self, outputSize: int, inputSize: int, initFunction: str):
         super().__init__(outputSize, inputSize, initFunction)
 
-    def softmax(self, Z):
-        # On soustrait le max pour la stabilité numérique
-        # (évite les explosions de exp())
+    def softmax(self, Z, derivate: bool):
+        if derivate == True:
+            d = np.diag(Z)
+            return d - np.outer(Z, Z)
+        
         Z = Z - np.max(Z, axis=1, keepdims=True)
         # Calcul de exp() pour chaque élément
         exp_Z = np.exp(Z)
@@ -87,5 +89,14 @@ class OutputLayer(NeuralLayer):
     
     def forwardPropagation(self, A):
         Z = np.dot(A, self.weights) + self.biais
-        return self.softmax(Z)
+        Y = self.softmax(Z, False)
+        print(Y[:, 0])
+        return Y
+    
+    def meanSquaredError(self, expectedYi, predictYi):
+        print('expectedYi shape', expectedYi.shape, type(expectedYi), 'predictYi shape', predictYi.shape, type(predictYi))
+        E = (expectedYi - predictYi)**2
+        return E
+    
+
 

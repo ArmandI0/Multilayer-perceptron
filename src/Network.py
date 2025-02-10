@@ -25,7 +25,7 @@ class Network:
         except IndexError as e:
             raise ValueError('Invalid index: ', e)
     
-    def doEpoch(self, batch):
+    def doEpoch(self, batch, expectedOutput):
         i = 0
         for layer in self.layer:    
             if i == 0:
@@ -33,5 +33,7 @@ class Network:
             else:
                 A = layer.forwardPropagation(A)
             i += 1
+        Error = layer.meanSquaredError(expectedOutput, A[:, 0])
         print(f"Layer {i}\n RETURN = \n{repr(A)}")
+        print(f"ERROR = {repr(Error)}")
 
