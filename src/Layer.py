@@ -119,29 +119,30 @@ class OutputLayer(NeuralLayer):
         return Y
     
     # dE_dw = dE_dz * y  et dE_dz = dE_dy * dérivée de la fonction d'activation dE_dy = dérivée de l'erreur par rapport à la sortie
-    def backPropagation(self, expectedYi):
-        dE_dy = self.binaryCrossEntropyError(expectedYi, True)
+    def backPropagation(self, yR):
+        dE_dy = self.binaryCrossEntropyError(yR, True)
         print(dE_dy.shape , self.softmax(self.Z, True).shape)
         dE_dz = dE_dy * self.softmax(self.Z, True)
-        print(f'dE_dz {dE_dz.shape} self.A {self.A.shape}')
+        dE_dzBis = yR - self.Y
+
+        print(f'dE_dz {dE_dz} self.A {self.A.shape}')
         dE_dw = np.dot(self.A.T, dE_dz.reshape(-1,1))
         print(f'shape weight : {self.weights.shape} shape result : {dE_dw.shape}')
         print(f'weight: {self.weights} \n dE_dw : {dE_dw}')
         self.weights = self.weights - 0.05 * dE_dw
         print('self.weight\n', self.weights)
 
-    def meanSquaredError(self, expectedYi: np.array, predictYi: np.array):
-        print('expectedYi shape', expectedYi.shape, type(expectedYi), 'predictYi shape', predictYi.shape, type(predictYi))
-        E = (expectedYi - predictYi)**2
+    def meanSquaredError(self, yR: np.array):
+        E = (yR - self.Y)**2
         return E
     
     # derive partiel par rapport a expectedY
-    def binaryCrossEntropyError(self, expectedYi: np.array, derivate: bool):
+    def binaryCrossEntropyError(self, yR: np.array, derivate: bool):
         if derivate == True:
-            dE = -1/len(expectedYi) * (expectedYi/self.Y - (1-expectedYi)/(1-self.Y))
+            dE = -1/len(yR) * (yR/self.Y - (1-yR)/(1-self.Y))
             return dE
         else:
-            E = -1 / len(expectedYi) * np.sum(expectedYi * np.log(self.Y) + (1 - expectedYi) * np.log(1 - self.activations))
+            E = -1 / len(yR) * np.sum(yR * np.log(self.Y) + (1 - yR) * np.log(1 - self.Y))
         return E
 
 
