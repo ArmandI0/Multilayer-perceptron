@@ -34,7 +34,4 @@ class Network:
                 A = layer.forwardPropagation(A)
             i += 1
         layer.backPropagation(expectedOutput)
-        # Error = layer.meanSquaredError(expectedOutput, A[:, 0])
-        # print(f"Layer {i}\n RETURN = \n{repr(A)}")
-        # print(f"ERROR = {repr(Error)}")
 
