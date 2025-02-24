@@ -1,6 +1,5 @@
 import numpy as np
-from .Layer import HiddenLayer, OutputLayer
-
+from src.Layer import HiddenLayer, OutputLayer
 class Network:
     def __init__(self, config: dict, nbOfFeatures: int):
         self.layer = []
@@ -33,5 +32,18 @@ class Network:
             else:
                 A = layer.forwardPropagation(A)
             i += 1
-        layer.backPropagation(expectedOutput)
+        i = 0
+        dE_dZ = expectedOutput
+        for layer in reversed(self.layer):
+            dE_dZ = layer.backPropagation(dE_dZ)
+            print(f"layer {i} \n {repr(layer.getWeights())}")
+            i+=1
+            # if i == 0:   
+            #     dE_dZ = layer.backPropagation(expectedOutput)
+            # else:
+            #     dE_dZ = layer.backPropagation(dE_dZ)
+            # i += 1
+            # if i == 2:
+            #     break
+
 

@@ -9,6 +9,16 @@ class NeuralLayer:
         self.biais = np.zeros(sizeOfLayer).reshape(-1,1).T
         self.weights = self.initFunctions[initFunction](self)
 
+    # Utils
+    def size(self):
+        return self.numberOfNeurons
+    
+    def getBiais(self):
+        return self.biais
+    
+    def getWeights(self):
+        return self.weights
+
     # Fonctions d'initialisations des poids
     def uniform_init(self):
         return np.random.uniform(-0.05, 0.05, size=(self.inputSize, self.numberOfNeurons))
@@ -52,16 +62,6 @@ class HiddenLayer(NeuralLayer):
         dE_dZ = np.dot(dE_dZoutput, self.weights.T)
         print('test', dE_dZ)
 
-    # Utils
-    def size(self):
-        return self.numberOfNeurons
-    
-    def getBiais(self):
-        return self.biais
-    
-    def getWeights(self):
-        return self.weights
-
     # Fonctons d'activations
 
     def ReLU(self, X):
@@ -90,7 +90,7 @@ class OutputLayer(NeuralLayer):
 
         log = Logger.getInstance()
         log.logForward('Output layer', A, self.numberOfNeurons, self.weights, Z, Y)
-    
+
         return Y
     
     # dE_dw = dE_dz * y  et dE_dz = dE_dy * dérivée de la fonction d'activation dE_dy = dérivée de l'erreur par rapport à la sortie
