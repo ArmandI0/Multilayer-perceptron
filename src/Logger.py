@@ -7,7 +7,7 @@ class Logger:
             Logger._instance = Logger()
         return Logger._instance
 
-    def __init__(self, debug=True):
+    def __init__(self, debug=False):
         if Logger._instance != None:
             raise Exception("This class is a singleton!")
         else:

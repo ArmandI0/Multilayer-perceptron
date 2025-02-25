@@ -69,17 +69,14 @@ class HiddenLayer(NeuralLayer):
         return Y
     
     def backPropagation(self, dE_dz):
-        learningRate = 0.05
+        learningRate = 0.01
         deriveActivationLayer = self.ReLU(self.Z, True)
-        print(f"dE_dz shape {dE_dz.shape} /n self.weight.T {self.weights.T.shape}")
-        print(f"dE_dz {dE_dz} /n self.weight.T {self.weights.T}")
-
         delta = dE_dz * deriveActivationLayer
-        # gradient = np.dot(self.A.T, delta)
-        # self.weights = self.weights - learningRate * gradient
-        # self.biais = self.biais - learningRate * np.sum(dE_dz.reshape(-1,1), axis=0)
-        # dE_dzLayer = np.dot(delta, self.weights.T)
-        # return dE_dzLayer
+        gradient = np.dot(self.A.T, delta)
+        self.weights = self.weights - learningRate * gradient
+        self.biais = self.biais - learningRate * np.sum(dE_dz, axis=0)
+        dE_dzLayer = np.dot(delta, self.weights.T)
+        return dE_dzLayer
 
     
 class OutputLayer(NeuralLayer):
@@ -100,43 +97,33 @@ class OutputLayer(NeuralLayer):
         Y = self.softmax(Z, False)
 
         self.A = A
-        self.Z = Z[:, 0] # comme c'est un sortie binaire on peut garder seulement une colone
-        self.Y = Y[:, 0]
-        self.Ybis = Y
+        self.Z = Z
+        self.Y = Y
 
         log = Logger.getInstance()
         log.logForward('Output layer', A, self.numberOfNeurons, self.weights, Z, Y)
-
+        print(Y)
         return Y
     
     # dE_dw = dE_dz * y  et dE_dz = dE_dy * dérivée de la fonction d'activation dE_dy = dérivée de l'erreur par rapport à la sortie
     def backPropagation(self, yR):
-        log = Logger.getInstance()
-        learningRate = 0.05
-        dE_dy = self.binaryCrossEntropyError(yR, True)
-        log.printShape('dE_dy', dE_dy)
-        dE_dz = dE_dy * self.softmax(self.Z, True)
-        log.printShape('dE_dz', dE_dz)
+        # transforme yR en matrice 3,2
         yRReshape = np.eye(2)[yR]
-        print(yR)
-        print(yRReshape)
-        dE_dzBis = yRReshape - self.Ybis
-        log.printShape('dE_dzBis', dE_dzBis)
-        print(f"🔹dE_dz: \n{repr(dE_dz)}\n 🔹dE_dzBis: \n {repr(dE_dzBis)}")
+
+        log = Logger.getInstance()
+
+        learningRate = 0.01
+        dE_dz = yRReshape - self.Y
 
         #calcul du gradient
-        dE_dw = np.dot(self.A.T, dE_dz.reshape(-1,1))
+        dE_dw = np.dot(self.A.T, dE_dz)
 
 
         oldWeight = self.weights.copy()
         self.weights = self.weights - learningRate * dE_dw
-        print(f'Self.biais{self.biais} \n dE_dz {dE_dz} \n {learningRate * dE_dz}')
-        self.biais = self.biais - learningRate * np.sum(dE_dz.reshape(-1,1), axis=0)
-        print('self.weight\n', self.weights)
-        log.logBackward('Output layer', dE_dz, dE_dw, oldWeight, self.weights)
-        print(f"de_dz reshape {dE_dz.reshape(1, -1)}")
+        self.biais = self.biais - learningRate * np.sum(dE_dz, axis=0)
         dE_dzLayer = np.dot(dE_dz, self.weights.T)
-        print(f"dE_dzLayer {dE_dzLayer.shape}")
+        log.logBackward('Output layer', dE_dz, dE_dw, oldWeight, self.weights)
         return dE_dzLayer
 
 
@@ -147,10 +134,12 @@ class OutputLayer(NeuralLayer):
     
     # Fonction de cout / loss function
     def binaryCrossEntropyError(self, yR: np.array, derivate: bool):
+        epsilon = 1e-15  # Évite la division par zéro
+        Y_safe = np.clip(self.Y, epsilon, 1 - epsilon)
         if derivate:
-            return -(yR / self.Y) + ((1 - yR) / (1 - self.Y))
+            return -(yR / Y_safe) + ((1 - yR) / (1 - Y_safe))
         else:
-            E = -1 / len(yR) * np.sum(yR * np.log(self.Y) + (1 - yR) * np.log(1 - self.Y))
+            E = -1 / len(yR) * np.sum(yR * np.log(Y_safe) + (1 - yR) * np.log(1 - Y_safe))
         return E
 
 

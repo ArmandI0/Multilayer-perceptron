@@ -38,7 +38,6 @@ class Network:
         dE_dZ = expectedOutput
         for layer in reversed(self.layer):
             dE_dZ = layer.backPropagation(dE_dZ)
-            print(f"layer {i} \n {repr(layer.getWeights())}")
             i+=1
             # if i == 0:   
             #     dE_dZ = layer.backPropagation(expectedOutput)
