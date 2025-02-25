@@ -1,5 +1,7 @@
 import numpy as np
 from src.Layer import HiddenLayer, OutputLayer
+
+
 class Network:
     def __init__(self, config: dict, nbOfFeatures: int):
         self.layer = []

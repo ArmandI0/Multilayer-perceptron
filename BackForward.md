@@ -1,41 +1,88 @@
-## Pour les couches cachees
-1 : 
+# Backpropagation
+
+## Pour la couche de sortie :
+
+### 1-Calculer l'erreur : 
 ```
-Delta_couche_cachée = Erreur_couche_cachée × Dérivée_fonction_activation(entrée_couche_cachée)
-
+output_error = target - output
+dE_dy = derivee partiel de la fonction de cout par rapport a yR
+```
+```math
+∂y∂E​=∂y∂​E(y,t)
 ```
 
-2 : 
+### 2-Calculer le delta : 
+```
+output_delta = output_error * dérivée_activation
+dE_dz = dE_dy * deriveePartiel de la foncton d'activation pa rapport a Z
+```
+```math
+∂z∂E​=∂y∂E​⋅∂z∂y​=∂y∂​E(y,t)⋅∂z∂​f(z)
+```
+
+### 3-Calcul du gradient :
+Gradient = Transpose des entrees de la couche * delta
+
+```math
+
+∂W∂E​=AT⋅δ
 
 ```
-Nouveau_poids = Ancien_poids + (Taux_apprentissage × Entrée_couche × Delta_couche_cachée)
+### 4-Mise a jour des poids :
 
 ```
-Le processus se déroule ainsi :
-
-Pour la couche de sortie :
-
-Calculer l'erreur : output_error = target - output
-Calculer le delta : output_delta = output_error * dérivée_activation(output_input)
+    Poids mis a jour = Poids - learning rate * gradient
+```
 
 
-Pour la couche cachée 3 :
 
-Calculer l'erreur : hidden3_error = output_delta × weights_hidden3_to_output.T
-Calculer le delta : hidden3_delta = hidden3_error * dérivée_activation(hidden3_input)
-Mettre à jour les poids : weights_hidden3_to_output += hidden3 × output_delta × learning_rate
+```math
+    W(t+1)=W(t)−η⋅∂W∂E​
+```
+### 5-Mise à jour des biais :
+```
+biais_mis_à_jour = biais_actuels - learning_rate * delta
+```
 
+$$b(t+1) = b(t) - \eta \cdot \delta$$
 
-Pour la couche cachée 2 :
+## Pour les couches cachees:
 
-Calculer l'erreur : hidden2_error = hidden3_delta × weights_hidden2_to_hidden3.T
-Calculer le delta : hidden2_delta = hidden2_error * dérivée_activation(hidden2_input)
-Mettre à jour les poids : weights_hidden2_to_hidden3 += hidden2 × hidden3_delta × learning_rate
+### 1-Calculer l'erreur:
 
+dans le code on le calcul dans la couche directement et on le return c'est dE_dz
+```
+hidden_error = matrice_poids_couche_suivante.T · delta_couche_suivante
+```
 
-Pour la couche cachée 1 :
+$\frac{\partial E}{\partial z^{(l-1)}} = \frac{\partial E}{\partial z^{(l)}} \cdot \frac{\partial z^{(l)}}{\partial z^{(l-1)}} = (W^{(l)})^T \cdot \delta^{(l)}$
 
-Calculer l'erreur : hidden1_error = hidden2_delta × weights_hidden1_to_hidden2.T
-Calculer le delta : hidden1_delta = hidden1_error * dérivée_activation(hidden1_input)
-Mettre à jour les poids : weights_hidden1_to_hidden2 += hidden1 × hidden2_delta × learning_rate
-Mettre à jour les poids : weights_input_to_hidden1 += input × hidden1_delta × learning_rate
+### 2-Calculer le delta :
+```
+hidden_delta = hidden_error * dérivée_activation_couche_cachée
+```
+
+$\frac{\partial E}{\partial z^{(l-1)}} = \frac{\partial E}{\partial a^{(l-1)}} \cdot \frac{\partial a^{(l-1)}}{\partial z^{(l-1)}} = (W^{(l)})^T \cdot \delta^{(l)} \odot \frac{\partial f(z^{(l-1)})}{\partial z^{(l-1)}}$
+
+Où ⊙ représente le produit élément par élément (Hadamard) et f' est la dérivée de la fonction d'activation.
+
+### 3-Calcul du gradient :
+```
+gradient_couche_cachée = activations_couche_précédente.T · hidden_delta
+```
+
+$\frac{\partial E}{\partial W^{(l-1)}} = \frac{\partial E}{\partial z^{(l-1)}} \cdot \frac{\partial z^{(l-1)}}{\partial W^{(l-1)}} = a^{(l-2)} \cdot (\frac{\partial E}{\partial z^{(l-1)}})^T$
+
+### 4-Mise à jour des poids :
+```
+poids_mis_à_jour = poids_actuels - learning_rate * gradient_couche_cachée
+```
+
+$W^{(l-1)}(t+1) = W^{(l-1)}(t) - \eta \cdot \frac{\partial E}{\partial W^{(l-1)}}$
+
+### 5-Mise à jour des biais :
+```
+biais_mis_à_jour = biais_actuels - learning_rate * hidden_delta
+```
+
+$b^{(l-1)}(t+1) = b^{(l-1)}(t) - \eta \cdot \frac{\partial E}{\partial b^{(l-1)}} = b^{(l-1)}(t) - \eta \cdot \frac{\partial E}{\partial z^{(l-1)}}$

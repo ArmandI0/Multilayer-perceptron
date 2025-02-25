@@ -37,3 +37,7 @@ class Logger:
         print(f"🔹 Gradient dE_dw: ajustement theorique \n{repr(dE_dw)}\n")
         print(f"🔹 Old weights: \n{repr(old_weights)}\n")
         print(f"🔹 Updated weights: \n{repr(new_weights)}\n")
+
+    def printShape(self, name, matrix):
+        print(f"{name}.shape = {matrix.shape}")
+

@@ -46,26 +46,41 @@ class HiddenLayer(NeuralLayer):
     def __init__(self, sizeOfLayer: int, inputSize: int, initFunction: str):
         super().__init__(sizeOfLayer, inputSize, initFunction)
 
+    # Fonctons d'activations
+
+    def ReLU(self, X, derivate: bool):
+        if derivate:
+            return (X > 0).astype(float)
+        else:
+            return np.maximum(0, X)
 
     # Forward propagation
 
     def forwardPropagation(self, A):
-
+        self.A = A
         Z = np.dot(A, self.weights) + self.biais
-        Y = self.ReLU(Z)
+        self.Z = Z
+        Y = self.ReLU(Z, False)
+        self.Y = Y
 
         log = Logger.getInstance()
         log.logForward('Hidden layer', A, self.numberOfNeurons, self.weights, Z, Y)
+
         return Y
     
-    def backPropagation(self, dE_dZoutput):
-        dE_dZ = np.dot(dE_dZoutput, self.weights.T)
-        print('test', dE_dZ)
+    def backPropagation(self, dE_dz):
+        learningRate = 0.05
+        deriveActivationLayer = self.ReLU(self.Z, True)
+        print(f"dE_dz shape {dE_dz.shape} /n self.weight.T {self.weights.T.shape}")
+        print(f"dE_dz {dE_dz} /n self.weight.T {self.weights.T}")
 
-    # Fonctons d'activations
+        delta = dE_dz * deriveActivationLayer
+        # gradient = np.dot(self.A.T, delta)
+        # self.weights = self.weights - learningRate * gradient
+        # self.biais = self.biais - learningRate * np.sum(dE_dz.reshape(-1,1), axis=0)
+        # dE_dzLayer = np.dot(delta, self.weights.T)
+        # return dE_dzLayer
 
-    def ReLU(self, X):
-        return np.maximum(0, X)
     
 class OutputLayer(NeuralLayer):
     def __init__(self, outputSize: int, inputSize: int, initFunction: str):
@@ -87,6 +102,7 @@ class OutputLayer(NeuralLayer):
         self.A = A
         self.Z = Z[:, 0] # comme c'est un sortie binaire on peut garder seulement une colone
         self.Y = Y[:, 0]
+        self.Ybis = Y
 
         log = Logger.getInstance()
         log.logForward('Output layer', A, self.numberOfNeurons, self.weights, Z, Y)
@@ -95,25 +111,41 @@ class OutputLayer(NeuralLayer):
     
     # dE_dw = dE_dz * y  et dE_dz = dE_dy * dérivée de la fonction d'activation dE_dy = dérivée de l'erreur par rapport à la sortie
     def backPropagation(self, yR):
+        log = Logger.getInstance()
+        learningRate = 0.05
         dE_dy = self.binaryCrossEntropyError(yR, True)
+        log.printShape('dE_dy', dE_dy)
         dE_dz = dE_dy * self.softmax(self.Z, True)
-        dE_dzBis = yR - self.Y
+        log.printShape('dE_dz', dE_dz)
+        yRReshape = np.eye(2)[yR]
+        print(yR)
+        print(yRReshape)
+        dE_dzBis = yRReshape - self.Ybis
+        log.printShape('dE_dzBis', dE_dzBis)
         print(f"🔹dE_dz: \n{repr(dE_dz)}\n 🔹dE_dzBis: \n {repr(dE_dzBis)}")
 
+        #calcul du gradient
         dE_dw = np.dot(self.A.T, dE_dz.reshape(-1,1))
+
+
         oldWeight = self.weights.copy()
-        self.weights = self.weights - 0.05 * dE_dw
+        self.weights = self.weights - learningRate * dE_dw
+        print(f'Self.biais{self.biais} \n dE_dz {dE_dz} \n {learningRate * dE_dz}')
+        self.biais = self.biais - learningRate * np.sum(dE_dz.reshape(-1,1), axis=0)
         print('self.weight\n', self.weights)
-        log = Logger.getInstance()
         log.logBackward('Output layer', dE_dz, dE_dw, oldWeight, self.weights)
-        
-        return dE_dz
+        print(f"de_dz reshape {dE_dz.reshape(1, -1)}")
+        dE_dzLayer = np.dot(dE_dz, self.weights.T)
+        print(f"dE_dzLayer {dE_dzLayer.shape}")
+        return dE_dzLayer
+
+
 
     def meanSquaredError(self, yR: np.array):
         E = (yR - self.Y)**2
         return E
     
-    # derive partiel par rapport a expectedY
+    # Fonction de cout / loss function
     def binaryCrossEntropyError(self, yR: np.array, derivate: bool):
         if derivate:
             return -(yR / self.Y) + ((1 - yR) / (1 - self.Y))
