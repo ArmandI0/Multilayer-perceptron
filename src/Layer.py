@@ -84,13 +84,12 @@ class OutputLayer(NeuralLayer):
         super().__init__(outputSize, inputSize, initFunction)
 
     def softmax(self, Z, derivate: bool):
-        if derivate == True:
+        if derivate:
             return self.Y * (1 - self.Y)
-        Z = Z - np.max(Z, axis=1, keepdims=True)
-        # Calcul de exp() pour chaque élément
-        exp_Z = np.exp(Z)
-        # Division par la somme pour normaliser
-        return exp_Z / np.sum(exp_Z, axis=1, keepdims=True)
+        # Stabilisation numérique
+        Z_stable = Z - np.max(Z, axis=1, keepdims=True)
+        exp_Z = np.exp(np.clip(Z_stable, -500, 500))  # Évite l'explosion numérique
+        return exp_Z / (np.sum(exp_Z, axis=1, keepdims=True) + 1e-10)  # Évite division par 0
     
     def forwardPropagation(self, A):
         Z = np.dot(A, self.weights) + self.biais
@@ -107,26 +106,27 @@ class OutputLayer(NeuralLayer):
     
     # dE_dw = dE_dz * y  et dE_dz = dE_dy * dérivée de la fonction d'activation dE_dy = dérivée de l'erreur par rapport à la sortie
     def backPropagation(self, yR):
-        # transforme yR en matrice 3,2
+        # transforme yR en matrice one-hot
         yRReshape = np.eye(2)[yR]
-
-        log = Logger.getInstance()
-
+        
+        # Clip les valeurs pour éviter l'instabilité numérique
+        Y_safe = np.clip(self.Y, 1e-10, 1-1e-10)
+        
         learningRate = 0.01
-        dE_dz = yRReshape - self.Y
-
-        #calcul du gradient
+        dE_dz = yRReshape - Y_safe
+        
+        # Gradient clipping
         dE_dw = np.dot(self.A.T, dE_dz)
-
-
+        dE_dw = np.clip(dE_dw, -1.0, 1.0)
+        
         oldWeight = self.weights.copy()
         self.weights = self.weights - learningRate * dE_dw
         self.biais = self.biais - learningRate * np.sum(dE_dz, axis=0)
         dE_dzLayer = np.dot(dE_dz, self.weights.T)
+        
+        log = Logger.getInstance()
         log.logBackward('Output layer', dE_dz, dE_dw, oldWeight, self.weights)
         return dE_dzLayer
-
-
 
     def meanSquaredError(self, yR: np.array):
         E = (yR - self.Y)**2

@@ -25,26 +25,16 @@ class Network:
             return self.layer[layerNum]
         except IndexError as e:
             raise ValueError('Invalid index: ', e)
-    
+
     def doEpoch(self, batch, expectedOutput):
-        i = 0
-        for layer in self.layer:    
-            if i == 0:
-                A = layer.forwardPropagation(batch)
-            else:
-                A = layer.forwardPropagation(A)
-            i += 1
-        i = 0
+        # Forward pass
+        A = batch
+        for layer in self.layer:
+            A = layer.forwardPropagation(A)
+        # Backward pass
         dE_dZ = expectedOutput
         for layer in reversed(self.layer):
             dE_dZ = layer.backPropagation(dE_dZ)
-            i+=1
-            # if i == 0:   
-            #     dE_dZ = layer.backPropagation(expectedOutput)
-            # else:
-            #     dE_dZ = layer.backPropagation(dE_dZ)
-            # i += 1
-            # if i == 2:
-            #     break
 
-
+    def networkTraining(self, data):
+        pass
