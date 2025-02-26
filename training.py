@@ -2,6 +2,7 @@ import numpy as np
 import src.tools as tl
 import json
 from src.Network import Network
+import matplotlib.pyplot as plt
 
 def main():
     try:
@@ -11,9 +12,9 @@ def main():
         y = np.array([0 if x == 'B' else 1 for x in df.iloc[:, 0]])
         
         # Division en batches de taille 32
-        batchSize = 5
+        batchSize = 32
         nbBatchs = len(X) // batchSize
-        print(nbBatchs)
+        
         # Création des batches
         A = np.array_split(X, nbBatchs)
         yR = np.array_split(y, nbBatchs)
@@ -22,11 +23,31 @@ def main():
         with open('generated_config.json', 'r') as f:
             network = Network(json.load(f), X.shape[1])
         
+        # Liste pour stocker les losses
+        losses = []
+        
         # Entraînement
-        for epoch in range(1):
-            # Entraînement sur chaque batch
+        for epoch in range(100):
+            epoch_loss = 0
+            # Entraînement sur chaque batch 
             for i in range(nbBatchs):
-                network.doEpoch(A[i], yR[i])
+                epoch_loss += network.doEpoch(A[i], yR[i])
+            average_loss = epoch_loss / nbBatchs
+            losses.append(average_loss)
+            print(f"EPOCH = {epoch}, loss = {average_loss}")
+        
+        # Création du graphique
+        plt.figure(figsize=(10, 6))
+        plt.plot(range(len(losses)), losses, 'b-', label='Training Loss')
+        plt.xlabel('Epoch')
+        plt.ylabel('Loss')
+        plt.grid(True)
+        plt.legend()
+        
+        # Sauvegarde du graphique
+        plt.savefig('training_loss.png')
+        plt.show()
+
     except Exception as e:
         print(f"Error: {e}")
 

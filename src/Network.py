@@ -31,10 +31,14 @@ class Network:
         A = batch
         for layer in self.layer:
             A = layer.forwardPropagation(A)
-        # Backward pass
-        dE_dZ = expectedOutput
-        for layer in reversed(self.layer):
+        
+        # Backward pass - la couche de sortie prend les labels
+        dE_dZ = self.layer[-1].backPropagation(expectedOutput)
+        loss = self.layer[-1].binaryCrossEntropyError(expectedOutput, derivate=False)
+        # Pour les couches cachées
+        for layer in reversed(self.layer[:-1]):
             dE_dZ = layer.backPropagation(dE_dZ)
+        return loss
 
     def networkTraining(self, data):
         pass

@@ -8,6 +8,7 @@ class NeuralLayer:
         self.numberOfNeurons = sizeOfLayer
         self.biais = np.zeros(sizeOfLayer).reshape(-1,1).T
         self.weights = self.initFunctions[initFunction](self)
+        self.learningRate = 0.01
 
     # Utils
     def size(self):
@@ -69,12 +70,11 @@ class HiddenLayer(NeuralLayer):
         return Y
     
     def backPropagation(self, dE_dz):
-        learningRate = 0.01
         deriveActivationLayer = self.ReLU(self.Z, True)
         delta = dE_dz * deriveActivationLayer
         gradient = np.dot(self.A.T, delta)
-        self.weights = self.weights - learningRate * gradient
-        self.biais = self.biais - learningRate * np.sum(dE_dz, axis=0)
+        self.weights = self.weights - self.learningRate * gradient
+        self.biais = self.biais - self.learningRate * np.sum(dE_dz, axis=0)
         dE_dzLayer = np.dot(delta, self.weights.T)
         return dE_dzLayer
 
@@ -82,15 +82,17 @@ class HiddenLayer(NeuralLayer):
 class OutputLayer(NeuralLayer):
     def __init__(self, outputSize: int, inputSize: int, initFunction: str):
         super().__init__(outputSize, inputSize, initFunction)
+        self.learning_rate = 0.001  # Réduit
 
     def softmax(self, Z, derivate: bool):
         if derivate:
             return self.Y * (1 - self.Y)
-        # Stabilisation numérique
+        
+        # Normalisation pour éviter l'explosion numérique
         Z_stable = Z - np.max(Z, axis=1, keepdims=True)
-        exp_Z = np.exp(np.clip(Z_stable, -500, 500))  # Évite l'explosion numérique
-        return exp_Z / (np.sum(exp_Z, axis=1, keepdims=True) + 1e-10)  # Évite division par 0
-    
+        exp_Z = np.exp(Z_stable)
+        return exp_Z / (np.sum(exp_Z, axis=1, keepdims=True) + 1e-15)
+   
     def forwardPropagation(self, A):
         Z = np.dot(A, self.weights) + self.biais
         Y = self.softmax(Z, False)
@@ -101,32 +103,27 @@ class OutputLayer(NeuralLayer):
 
         log = Logger.getInstance()
         log.logForward('Output layer', A, self.numberOfNeurons, self.weights, Z, Y)
-        print(Y)
+        # np.set_printoptions(suppress=True)
+        # print(f"output layer {Y}")
         return Y
     
     # dE_dw = dE_dz * y  et dE_dz = dE_dy * dérivée de la fonction d'activation dE_dy = dérivée de l'erreur par rapport à la sortie
     def backPropagation(self, yR):
-        # transforme yR en matrice one-hot
+        # Convertir les étiquettes en format one-hot
         yRReshape = np.eye(2)[yR]
         
-        # Clip les valeurs pour éviter l'instabilité numérique
-        Y_safe = np.clip(self.Y, 1e-10, 1-1e-10)
+        # Pour softmax + cross-entropy, le gradient est (y_pred - y_true)
+        dE_dz = self.Y - yRReshape  # Notez le changement d'ordre!
         
-        learningRate = 0.01
-        dE_dz = yRReshape - Y_safe
-        
-        # Gradient clipping
+        # Calcul du gradient pour les poids
         dE_dw = np.dot(self.A.T, dE_dz)
-        dE_dw = np.clip(dE_dw, -1.0, 1.0)
         
-        oldWeight = self.weights.copy()
-        self.weights = self.weights - learningRate * dE_dw
-        self.biais = self.biais - learningRate * np.sum(dE_dz, axis=0)
-        dE_dzLayer = np.dot(dE_dz, self.weights.T)
+        # Mise à jour des poids et biais avec un learning rate faible
+        self.weights -= self.learning_rate * dE_dw
+        self.biais -= self.learning_rate * np.sum(dE_dz, axis=0)
         
-        log = Logger.getInstance()
-        log.logBackward('Output layer', dE_dz, dE_dw, oldWeight, self.weights)
-        return dE_dzLayer
+        # Propagation de l'erreur à la couche précédente
+        return np.dot(dE_dz, self.weights.T)
 
     def meanSquaredError(self, yR: np.array):
         E = (yR - self.Y)**2
@@ -139,7 +136,13 @@ class OutputLayer(NeuralLayer):
         if derivate:
             return -(yR / Y_safe) + ((1 - yR) / (1 - Y_safe))
         else:
-            E = -1 / len(yR) * np.sum(yR * np.log(Y_safe) + (1 - yR) * np.log(1 - Y_safe))
+            # Conversion en one-hot si nécessaire
+            if len(yR.shape) == 1:
+                yR_one_hot = np.eye(2)[yR]
+            else:
+                yR_one_hot = yR
+                
+            E = -1 / len(yR) * np.sum(yR_one_hot * np.log(Y_safe) + (1 - yR_one_hot) * np.log(1 - Y_safe))
         return E
 
 
