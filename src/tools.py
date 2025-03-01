@@ -1,7 +1,7 @@
 import pandas as pd
 import math as mt
 
-def load_csv(path: str, header: int) -> pd.DataFrame:
+def load_csv(path: str) -> pd.DataFrame:
     """
     Function to load a csv
     Parameters : path of the csv
@@ -14,7 +14,7 @@ def load_csv(path: str, header: int) -> pd.DataFrame:
         return None
     return csv
 
-def split_dataset_randomly(datas: pd.DataFrame):
+def splitDatasetRandomly(datas: pd.DataFrame):
     trainingSet = pd.DataFrame()
     testingSet = pd.DataFrame()
     randomData = datas.sample(frac=1)
@@ -36,23 +36,41 @@ def normalizePdSeries(variable : pd.Series, parameters : pd.Series) -> pd.Series
     variableNormalized = (variable - parameters['mean']) / parameters['std']
     return variableNormalized
 
-def normalize_datas(datas: pd.DataFrame):
-    entry = datas.drop(columns='1')
+def normalizeDatas(datas: pd.DataFrame):
+    entry = datas.iloc[:, 1:]
+    entry = entry.astype(float)
+    
     normalizeDatas = pd.DataFrame()
-    normalisationParam = pd.DataFrame(index=['mean', 'std', 'median'])
-    for serie in entry.columns:
-        median = entry[serie].median()
-        mean = entry[serie].mean()        
+    normalisationParam = pd.DataFrame(
+        index=['mean', 'std', 'median'],
+        columns=range(len(entry.columns))
+    )
+    
+    for i, serie in enumerate(entry.columns):
+        mean = entry[serie].mean()
         std = entry[serie].std()
-        normalisationParam[serie] = [median, mean, std]
-        normalizeDatas[serie] = normalizePdSeries(entry[serie].fillna(median), normalisationParam[serie])
-    normalisationParam.to_csv('data/normalistaion_params.csv')
+        median = entry[serie].median()
+        
+        normalisationParam[i] = [mean, std, median]
+        normalizeDatas[i] = normalizePdSeries(entry[serie].fillna(median), normalisationParam[i])
+    
+    normalisationParam.to_csv('data/normalisation_params.csv', index=True, index_label='parameter')
+    
     return normalizeDatas
 
-        
+def normalizeDatasWithParams(datas: pd.DataFrame, params: pd.DataFrame):
+    entry = datas.iloc[:, 1:]
+    entry = entry.astype(float)
+    normalizeDatas = pd.DataFrame()
+    for i, serie in enumerate(entry.columns):
+        mean = params.loc['mean', str(i)]
+        std = params.loc['std', str(i)]
+        median = params.loc['std', str(i)]
+        normalisationParam = pd.Series({
+            'mean': mean,
+            'std': std,
+            'median': median
+        })
+        normalizeDatas[i] = normalizePdSeries(entry[serie].fillna(median), normalisationParam)
+    return normalizeDatas
 
-
-# df = load_csv('data/data.csv')
-# print(df.describe())
-# normalize_datas(df)
-    

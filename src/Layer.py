@@ -17,8 +17,14 @@ class NeuralLayer:
     def getBiais(self):
         return self.biais
     
+    def setBiais(self, biais):
+        self.biais = biais
+
     def getWeights(self):
         return self.weights
+    
+    def setWeights(self, weights):
+        self.weights = weights
 
     # Fonctions d'initialisations des poids
     def uniform_init(self):
@@ -57,12 +63,13 @@ class HiddenLayer(NeuralLayer):
 
     # Forward propagation
 
-    def forwardPropagation(self, A):
-        self.A = A
+    def forwardPropagation(self, A, predict: bool):
         Z = np.dot(A, self.weights) + self.biais
-        self.Z = Z
         Y = self.ReLU(Z, False)
-        self.Y = Y
+        if not predict:
+            self.A = A
+            self.Z = Z
+            self.Y = Y
 
         log = Logger.getInstance()
         log.logForward('Hidden layer', A, self.numberOfNeurons, self.weights, Z, Y)
@@ -82,47 +89,45 @@ class HiddenLayer(NeuralLayer):
 class OutputLayer(NeuralLayer):
     def __init__(self, outputSize: int, inputSize: int, initFunction: str):
         super().__init__(outputSize, inputSize, initFunction)
-        self.learning_rate = 0.001  # Réduit
-
+        
     def softmax(self, Z, derivate: bool):
         if derivate:
             return self.Y * (1 - self.Y)
         
-        # Normalisation pour éviter l'explosion numérique
+        # Meilleure stabilité numérique
+        Z = np.clip(Z, -100, 100)  # Limite les valeurs extrêmes
         Z_stable = Z - np.max(Z, axis=1, keepdims=True)
         exp_Z = np.exp(Z_stable)
-        return exp_Z / (np.sum(exp_Z, axis=1, keepdims=True) + 1e-15)
+        return exp_Z / (np.sum(exp_Z, axis=1, keepdims=True) + 1e-7)
    
-    def forwardPropagation(self, A):
+    def forwardPropagation(self, A, predict: bool):
         Z = np.dot(A, self.weights) + self.biais
         Y = self.softmax(Z, False)
 
-        self.A = A
-        self.Z = Z
-        self.Y = Y
+        if not predict:
+            self.A = A
+            self.Z = Z
+            self.Y = Y
 
         log = Logger.getInstance()
         log.logForward('Output layer', A, self.numberOfNeurons, self.weights, Z, Y)
-        # np.set_printoptions(suppress=True)
-        # print(f"output layer {Y}")
         return Y
     
     # dE_dw = dE_dz * y  et dE_dz = dE_dy * dérivée de la fonction d'activation dE_dy = dérivée de l'erreur par rapport à la sortie
     def backPropagation(self, yR):
-        # Convertir les étiquettes en format one-hot
         yRReshape = np.eye(2)[yR]
         
-        # Pour softmax + cross-entropy, le gradient est (y_pred - y_true)
-        dE_dz = self.Y - yRReshape  # Notez le changement d'ordre!
+        # Clip les prédictions pour éviter log(0)
+        Y_safe = np.clip(self.Y, 1e-7, 1-1e-7)
         
-        # Calcul du gradient pour les poids
+        # Gradient clipping
+        dE_dz = np.clip(Y_safe - yRReshape, -1, 1)
         dE_dw = np.dot(self.A.T, dE_dz)
+        dE_dw = np.clip(dE_dw, -0.1, 0.1)  # Limite les gradients
         
-        # Mise à jour des poids et biais avec un learning rate faible
-        self.weights -= self.learning_rate * dE_dw
-        self.biais -= self.learning_rate * np.sum(dE_dz, axis=0)
+        self.weights -= self.learningRate * dE_dw
+        self.biais -= self.learningRate * np.sum(dE_dz, axis=0)
         
-        # Propagation de l'erreur à la couche précédente
         return np.dot(dE_dz, self.weights.T)
 
     def meanSquaredError(self, yR: np.array):
@@ -131,18 +136,48 @@ class OutputLayer(NeuralLayer):
     
     # Fonction de cout / loss function
     def binaryCrossEntropyError(self, yR: np.array, derivate: bool):
-        epsilon = 1e-15  # Évite la division par zéro
+        epsilon = 1e-7  # Plus petit epsilon
         Y_safe = np.clip(self.Y, epsilon, 1 - epsilon)
+        
         if derivate:
-            return -(yR / Y_safe) + ((1 - yR) / (1 - Y_safe))
+            return np.clip(-(yR / Y_safe) + ((1 - yR) / (1 - Y_safe)), -100, 100)
         else:
-            # Conversion en one-hot si nécessaire
             if len(yR.shape) == 1:
                 yR_one_hot = np.eye(2)[yR]
             else:
                 yR_one_hot = yR
-                
-            E = -1 / len(yR) * np.sum(yR_one_hot * np.log(Y_safe) + (1 - yR_one_hot) * np.log(1 - Y_safe))
-        return E
+            E = -1 / len(yR) * np.sum(
+                yR_one_hot * np.log(Y_safe) + 
+                (1 - yR_one_hot) * np.log(1 - Y_safe)
+            )
+            return np.clip(E, 0, 100)
+    
+    #Compare et fais la moyenne des egales pas egales
+    def fctAccuracy(self, yR):
+        predictions = np.argmax(self.Y, axis=1)
+        correct_predictions = np.sum(predictions == yR)
+        accuracy = correct_predictions / len(yR)
+        
+        return accuracy
 
+
+    def fctAccuracyTest(self, yR, pred):
+        predictions = np.argmax(pred, axis=1)
+        correct_predictions = np.sum(predictions == yR) 
+        accuracy = correct_predictions / len(yR)
+        return accuracy
+    
+    def binaryCrossEntropyErrorForPredict(self, yR: np.array, yPredict: np.array):
+        epsilon = 1e-7
+        Y_safe = np.clip(yPredict, epsilon, 1 - epsilon)
+        if len(yR.shape) == 1:
+            yR_one_hot = np.eye(2)[yR]
+        else:
+            yR_one_hot = yR
+        E = -1 / len(yR) * np.sum(
+            yR_one_hot * np.log(Y_safe) + 
+            (1 - yR_one_hot) * np.log(1 - Y_safe)
+        )
+        
+        return np.clip(E, 0, 100)
 
