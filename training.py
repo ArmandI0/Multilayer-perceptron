@@ -22,7 +22,7 @@ def main():
         with open('generated_config.json', 'r') as f:
             network = Network(json.load(f), trainingData.shape[1], testingData, answersTesting)
         
-        network.networkTraining(trainingData, answersTraining, 32, 20)
+        network.networkTraining(trainingData, answersTraining, 32, 60)
         network.accuracyCurveCreate()
         network.lossCurveCreate()
         network.saveNetworkAsJson()

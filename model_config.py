@@ -3,7 +3,7 @@ from tkinter import ttk
 import pandas as pd
 import json
 
-activationFunctions = ['relu', 'sigmoid', 'tanh', 'softmax', 'linear']
+activationFunctions = ['relu']
 weightInitializers = ['uniform_init', 'glorot_uniform', 'he_normal', 'lecun_uniform']
 
 df = pd.DataFrame(columns=['nbOfNeurons', 'weightInit', 'activationFunction'])

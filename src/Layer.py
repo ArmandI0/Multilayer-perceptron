@@ -8,7 +8,7 @@ class NeuralLayer:
         self.numberOfNeurons = sizeOfLayer
         self.biais = np.zeros(sizeOfLayer).reshape(-1,1).T
         self.weights = self.initFunctions[initFunction](self)
-        self.learningRate = 0.01
+        self.learningRate = 0.001
 
     # Utils
     def size(self):
