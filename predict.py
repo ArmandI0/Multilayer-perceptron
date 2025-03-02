@@ -5,7 +5,7 @@ from src.Network import Network
 
 def main():
     try:
-        df = tl.load_csv('data/testing_set.csv')
+        df = tl.load_csv('data/data_test.csv')
         dfParams = tl.load_csv('data/normalisation_params.csv')
 
         answers = np.array([0 if x == 'B' else 1 for x in df.iloc[:, 0]])

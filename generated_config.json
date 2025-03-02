@@ -1,0 +1,20 @@
+{
+    "0": {
+        "nbOfNeurons": "32",
+        "weightInit": "he_normal",
+        "activationFunction": "relu"
+    },
+    "1": {
+        "nbOfNeurons": "16",
+        "weightInit": "he_normal",
+        "activationFunction": "relu"
+    },
+    "2": {
+        "nbOfNeurons": "8",
+        "weightInit": "he_normal",
+        "activationFunction": "relu"
+    },
+    "OutputLayer": {
+        "weightInit": "he_normal"
+    }
+}

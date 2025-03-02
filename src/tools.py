@@ -24,8 +24,8 @@ def splitDatasetRandomly(datas: pd.DataFrame):
 
     trainingSet =  randomData.iloc[0:mid, :]
     testingSet = randomData.iloc[mid:size, :]
-    trainingSet.to_csv('data/training_set.csv')
-    testingSet.to_csv('data/testing_set.csv')
+    trainingSet.to_csv('data/data_training.csv')
+    testingSet.to_csv('data/data_test.csv')
 
 def normalizePdSeries(variable : pd.Series, parameters : pd.Series) -> pd.Series :
     """
